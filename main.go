@@ -1,10 +1,10 @@
 package main
 
 import (
+	"dotfiles/cmd"
+
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-
-	"dotfiles/cmd"
 )
 
 func main() {

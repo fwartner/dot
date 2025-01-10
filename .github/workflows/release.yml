@@ -1,0 +1,35 @@
+name: Release Go Binary
+
+on:
+  release:
+    types: [created]
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  releases-matrix:
+    name: Release Go Binary
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, darwin] # Supported platforms
+        goarch: [amd64, arm64] # Supported architectures
+        exclude:
+          - goarch: arm64
+            goos: linux # Exclude any unsupported combination if needed
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Release Binaries
+        uses: wangyoucao577/go-release-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          goos: ${{ matrix.goos }}
+          goarch: ${{ matrix.goarch }}
+          goversion: "latest" # Use the latest Go version
+          binary_name: "dotfiles" # Custom binary name
+          project_path: "./" # Path to the Go project
+          extra_files: "LICENSE README.md" # Include additional files in the release

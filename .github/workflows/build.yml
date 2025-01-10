@@ -24,19 +24,16 @@ jobs:
         with:
           go-version: 1.19
 
-      - name: Build Binary
+      - name: Build Binaries
         run: |
           mkdir -p build
-          GOOS=$(echo "${{ matrix.os }}" | cut -d '-' -f 1)
-          GOARCH=${{ matrix.arch }}
-          OUTPUT="build/dotfiles-${GOOS}-${GOARCH}"
-          if [[ "$GOOS" == "windows" ]]; then
-            OUTPUT+=".exe"
-          fi
-          go build -o $OUTPUT
-        env:
-          GOOS: ${{ matrix.os }}
-          GOARCH: ${{ matrix.arch }}
+          for OS in ${{ matrix.os }}; do
+            for ARCH in ${{ matrix.arch }}; do
+              OUTPUT="build/dotfiles-${OS}-${ARCH}"
+              GOOS=$OS GOARCH=$ARCH go build -o $OUTPUT
+              tar -czf "${OUTPUT}.tar.gz" -C build "$(basename $OUTPUT)"
+            done
+          done
 
       - name: Archive Build
         run: |

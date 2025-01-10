@@ -17,6 +17,7 @@ func main() {
 	// Add commands
 	rootCmd.AddCommand(cmd.NewInstallCommand())
 	rootCmd.AddCommand(cmd.NewSetupCommand())
+	rootCmd.AddCommand(cmd.NewInitCommand())
 	rootCmd.AddCommand(cmd.NewPullCommand())
 	rootCmd.AddCommand(cmd.NewPushCommand())
 	rootCmd.AddCommand(cmd.NewUpdateCommand())

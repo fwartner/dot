@@ -1,3 +1,7 @@
+Here’s the updated **README.md** with the new usage instructions (including the `init` command) and the installation options using `curl` and `wget`.
+
+---
+
 # dot
 
 A robust CLI tool to manage, install, and synchronize your dotfiles across multiple systems. The tool supports various Linux distributions (Debian, Ubuntu, Fedora, Arch) and macOS, ensuring your development environment is consistent everywhere.
@@ -11,7 +15,9 @@ A robust CLI tool to manage, install, and synchronize your dotfiles across multi
 - **Dotfiles Synchronization**:
   - Clones your dotfiles repository.
   - Manages symlinks using [GNU Stow](https://www.gnu.org/software/stow/).
-  - Pulls and pushes updates to your dotfiles repository.
+  - Pulls and pushes updates to your dotfiles repository with meaningful commit messages.
+- **Repository Initialization**:
+  - Quickly set up a new dotfiles repository with a basic structure and optional remote origin.
 - **Customizable**:
   - Configure tools, dotfiles repository, and installation preferences using `config.yml`.
 - **Extensible CLI**: Built with [Cobra](https://github.com/spf13/cobra), offering modular commands with flags.
@@ -26,6 +32,26 @@ Ensure the following are installed on your system:
 
 - **Git**: For cloning your dotfiles repository.
 - **GNU Stow**: For managing symlinks.
+
+### Install with `curl` or `wget`
+
+#### Using `curl`:
+
+```bash
+curl -L https://github.com/fwartner/dot/releases/latest/download/dotfiles-$(uname -s)-$(uname -m) -o /usr/local/bin/dot
+chmod +x /usr/local/bin/dot
+```
+
+#### Using `wget`:
+
+```bash
+wget https://github.com/fwartner/dot/releases/latest/download/dotfiles-$(uname -s)-$(uname -m) -O /usr/local/bin/dot
+chmod +x /usr/local/bin/dot
+```
+
+The `$(uname -s)` and `$(uname -m)` dynamically resolve the operating system (`Linux`, `Darwin`) and architecture (`x86_64`, `arm64`), ensuring the correct binary is downloaded.
+
+---
 
 ### Build from Source
 
@@ -45,8 +71,6 @@ Ensure the following are installed on your system:
    go mod tidy
    ```
 
-   This will create a `go.mod` file and resolve all dependencies.
-
 3. **Build the Binary**
 
    ```bash
@@ -58,10 +82,8 @@ Ensure the following are installed on your system:
    Place the binary in your `$PATH` for easier usage:
 
    ```bash
-   mv dotfiles /usr/local/bin/
+   mv dotfiles /usr/local/bin/dot
    ```
-
-Alternatively, download a prebuilt binary from the [Releases](https://github.com/fwartner/dot/releases) page.
 
 ---
 
@@ -96,42 +118,69 @@ tools:
 
 The tool provides several commands to manage your dotfiles. Each command supports additional flags for customization.
 
-### 1. Install Dependencies
+### 1. Initialize a New Repository
 
 ```bash
-dot install [--skip-zsh]
+dot init [--remote <repository-url>]
+```
+
+- Sets up a new directory for managing dotfiles.
+- Initializes a Git repository in the directory.
+- Optionally adds a remote origin if `--remote` is provided.
+
+Example:
+```bash
+dot init --remote https://github.com/username/dotfiles.git
+```
+
+---
+
+### 2. Install Dependencies
+
+```bash
+dot install [--skip <tool1,tool2>]
 ```
 
 - Installs tools specified in `config.yml`.
-- Optionally skips installing Oh My Zsh with the `--skip-zsh` flag.
+- Skips installing tools listed with the `--skip` flag.
 
-### 2. Setup Dotfiles
+Example:
+```bash
+dot install --skip zsh,neovim
+```
+
+---
+
+### 3. Setup Dotfiles
 
 ```bash
-dot setup [--dir <custom-directory>]
+dot setup
 ```
 
 - Clones the dotfiles repository.
 - Manages symlinks using GNU Stow.
-- Use the `--dir` flag to specify a custom directory for dotfiles.
 
-### 3. Pull Updates
+---
+
+### 4. Pull Updates
 
 ```bash
-dot pull [--fetch-only]
+dot pull
 ```
 
 - Pulls the latest changes from your dotfiles repository.
-- Use the `--fetch-only` flag to fetch updates without merging them.
 
-### 4. Push Changes
+---
+
+### 5. Push Changes
 
 ```bash
-dot push [--message <commit-message>]
+dot push
 ```
 
 - Pushes local changes to the dotfiles repository.
-- Use the `--message` flag to specify a custom commit message.
+- Generates meaningful commit messages based on file changes, such as:
+  - `"Added: .zshrc, .vimrc; Modified: .bashrc; Deleted: .oldconfig"`
 
 ---
 
@@ -146,6 +195,7 @@ dot push [--message <commit-message>]
 ```
 dot/
 ├── cmd/            # Command implementations
+│   ├── init.go
 │   ├── install.go
 │   ├── setup.go
 │   ├── pull.go

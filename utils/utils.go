@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -151,14 +153,6 @@ func PullDotfiles() {
 	RunCommand("git", "-C", Config.DotfilesDir, "pull")
 }
 
-// PushDotfiles commits and pushes local changes to the dotfiles repository
-func PushDotfiles() {
-	logrus.Info("Pushing local changes to dotfiles repository")
-	RunCommand("git", "-C", Config.DotfilesDir, "add", ".")
-	RunCommand("git", "-C", Config.DotfilesDir, "commit", "-m", "Updated dotfiles")
-	RunCommand("git", "-C", Config.DotfilesDir, "push")
-}
-
 // UpdateTool updates the tool by pulling the latest version and rebuilding
 func UpdateTool() {
 	logrus.Info("Updating the dotfiles manager tool...")
@@ -175,4 +169,182 @@ func RunCommand(command string, args ...string) {
 	if err := cmd.Run(); err != nil {
 		logrus.Fatalf("Command failed: %s %s: %v", command, strings.Join(args, " "), err)
 	}
+}
+
+// PushDotfiles commits and pushes local changes to the dotfiles repository
+func PushDotfiles() {
+	dotfilesDir := Config.DotfilesDir
+	if dotfilesDir == "" {
+		dotfilesDir = os.ExpandEnv("$HOME/dotfiles")
+	}
+
+	// Check if there are changes to commit
+	output, err := RunGitCommand(dotfilesDir, "status", "--porcelain")
+	if err != nil {
+		logrus.Fatalf("Failed to check git status: %v", err)
+	}
+
+	if strings.TrimSpace(output) == "" {
+		logrus.Info("No changes to commit.")
+		return
+	}
+
+	// Stage changes
+	logrus.Info("Staging changes...")
+	if _, err := RunGitCommand(dotfilesDir, "add", "."); err != nil {
+		logrus.Fatalf("Failed to stage changes: %v", err)
+	}
+
+	// Generate commit message based on changes
+	commitMessage := GenerateCommitMessage(dotfilesDir)
+	logrus.Infof("Committing changes with message: %s", commitMessage)
+	if _, err := RunGitCommand(dotfilesDir, "commit", "-m", commitMessage); err != nil {
+		logrus.Fatalf("Failed to commit changes: %v", err)
+	}
+
+	// Push changes
+	logrus.Info("Pushing changes to the repository...")
+	if _, err := RunGitCommand(dotfilesDir, "push"); err != nil {
+		logrus.Fatalf("Failed to push changes: %v", err)
+	}
+
+	logrus.Info("Changes pushed successfully.")
+}
+
+// GenerateCommitMessage creates a commit message based on file changes
+func GenerateCommitMessage(repoDir string) string {
+	output, err := RunGitCommand(repoDir, "diff", "--cached", "--name-status")
+	if err != nil {
+		logrus.Fatalf("Failed to generate commit message: %v", err)
+	}
+
+	var added, modified, deleted []string
+	lines := strings.Split(output, "\n")
+	for _, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+
+		parts := strings.Fields(line)
+		if len(parts) < 2 {
+			continue
+		}
+
+		status := parts[0]
+		file := parts[1]
+
+		switch status {
+		case "A":
+			added = append(added, file)
+		case "M":
+			modified = append(modified, file)
+		case "D":
+			deleted = append(deleted, file)
+		}
+	}
+
+	// Generate a summary message
+	var messageParts []string
+	if len(added) > 0 {
+		messageParts = append(messageParts, fmt.Sprintf("Added: %s", strings.Join(added, ", ")))
+	}
+	if len(modified) > 0 {
+		messageParts = append(messageParts, fmt.Sprintf("Modified: %s", strings.Join(modified, ", ")))
+	}
+	if len(deleted) > 0 {
+		messageParts = append(messageParts, fmt.Sprintf("Deleted: %s", strings.Join(deleted, ", ")))
+	}
+
+	if len(messageParts) == 0 {
+		return "Updated dotfiles"
+	}
+
+	return strings.Join(messageParts, "; ")
+}
+
+// InitDotfilesRepo initializes a new dotfiles repository
+func InitDotfilesRepo(remote string) error {
+	// Use the configured directory or fallback to the default
+	dotfilesDir := Config.DotfilesDir
+	if dotfilesDir == "" {
+		dotfilesDir = os.ExpandEnv("$HOME/dotfiles")
+	}
+
+	// Create the dotfiles directory if it doesn't exist
+	if _, err := os.Stat(dotfilesDir); os.IsNotExist(err) {
+		logrus.Infof("Creating dotfiles directory: %s", dotfilesDir)
+		if err := os.MkdirAll(dotfilesDir, 0755); err != nil {
+			return fmt.Errorf("failed to create dotfiles directory: %w", err)
+		}
+	}
+
+	// Initialize Git repository
+	logrus.Infof("Initializing Git repository in: %s", dotfilesDir)
+	cmd := exec.Command("git", "init")
+	cmd.Dir = dotfilesDir
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to initialize Git repository: %w", err)
+	}
+
+	// Add a remote repository if provided
+	if remote != "" {
+		logrus.Infof("Adding remote origin: %s", remote)
+		cmd := exec.Command("git", "remote", "add", "origin", remote)
+		cmd.Dir = dotfilesDir
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to add remote repository: %w", err)
+		}
+
+		// Fetch the remote's default branch
+		logrus.Info("Fetching remote default branch...")
+		cmd = exec.Command("git", "fetch", "--all")
+		cmd.Dir = dotfilesDir
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to fetch remote branches: %w", err)
+		}
+
+		// Determine the default branch of the remote
+		output, err := RunGitCommand(dotfilesDir, "symbolic-ref", "refs/remotes/origin/HEAD")
+		if err != nil {
+			logrus.Warn("Unable to determine remote default branch. Defaulting to 'main'.")
+		} else {
+			defaultBranch := strings.TrimSpace(strings.Replace(output, "refs/remotes/origin/", "", 1))
+			logrus.Infof("Setting default branch to: %s", defaultBranch)
+
+			// Set the default branch locally
+			cmd = exec.Command("git", "branch", "-M", defaultBranch)
+			cmd.Dir = dotfilesDir
+			if err := cmd.Run(); err != nil {
+				return fmt.Errorf("failed to set default branch to %s: %w", defaultBranch, err)
+			}
+		}
+	}
+
+	// Create a basic .gitignore file
+	gitignorePath := filepath.Join(dotfilesDir, ".gitignore")
+	if _, err := os.Stat(gitignorePath); os.IsNotExist(err) {
+		logrus.Infof("Creating .gitignore file in: %s", dotfilesDir)
+		content := `
+# Ignore stow-related files
+*/.stow-local-ignore
+*/.stow-global-ignore
+`
+		if err := os.WriteFile(gitignorePath, []byte(content), 0644); err != nil {
+			return fmt.Errorf("failed to create .gitignore file: %w", err)
+		}
+	}
+
+	logrus.Infof("Dotfiles repository initialized at: %s", dotfilesDir)
+	return nil
+}
+
+// RunGitCommand runs a git command in the specified repository directory
+func RunGitCommand(repoDir string, args ...string) (string, error) {
+	cmd := exec.Command("git", args...)
+	cmd.Dir = repoDir
+	output, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("git command failed: %w", err)
+	}
+	return strings.TrimSpace(string(output)), nil
 }

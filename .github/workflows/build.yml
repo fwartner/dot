@@ -1,0 +1,46 @@
+name: Build Tool
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+        arch: [amd64, arm64]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.19
+
+      - name: Build Binary
+        run: |
+          mkdir -p build
+          GOOS=$(echo "${{ matrix.os }}" | cut -d '-' -f 1)
+          GOARCH=${{ matrix.arch }}
+          OUTPUT="build/dotfiles-${GOOS}-${GOARCH}"
+          if [[ "$GOOS" == "windows" ]]; then
+            OUTPUT+=".exe"
+          fi
+          go build -o $OUTPUT
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+
+      - name: Archive Build
+        run: |
+          cd build
+          for FILE in *; do
+            tar -czf "${FILE}.tar.gz" "$FILE"
+          done

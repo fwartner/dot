@@ -1,0 +1,13 @@
+# Repository URL for the dotfiles
+dotfiles_repo: "https://github.com/your-username/dotfiles.git"
+
+# Directory where the dotfiles will be cloned
+dotfiles_dir: "~/dotfiles"
+
+# List of tools to be installed
+tools:
+  - git
+  - stow
+  - zsh
+  - neovim
+  - tmux

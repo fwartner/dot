@@ -1,0 +1,43 @@
+name: Release Tool
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.19
+
+      - name: Build Binaries
+        strategy:
+          matrix:
+            os: [linux, darwin] # darwin for macOS, linux for Linux
+            arch: [amd64, arm64]
+        run: |
+          mkdir -p build
+          for OS in ${{ matrix.os }}; do
+            for ARCH in ${{ matrix.arch }}; do
+              OUTPUT="build/dotfiles-${OS}-${ARCH}"
+              GOOS=$OS GOARCH=$ARCH go build -o $OUTPUT
+              tar -czf "${OUTPUT}.tar.gz" -C build "$(basename $OUTPUT)"
+            done
+          done
+
+      - name: Upload Assets
+        uses: actions/upload-release-asset@v1
+        for_each: build/*.tar.gz
+        with:
+          name: ${{ file }}
+          path: ${{ file }}
+          release_id: ${{ github.event.release.id }}

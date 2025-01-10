@@ -1,4 +1,4 @@
-name: Release Go Binary
+name: Release Go Binary 🚀
 
 on:
   release:
@@ -9,29 +9,38 @@ permissions:
 
 jobs:
   release:
-    name: Release Tool
+    name: Release Tool 🛠️
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout Code 📥
         uses: actions/checkout@v4
 
-      - name: Set up Go
+      - name: Set up Go Environment 🐹
         uses: actions/setup-go@v4
         with:
           go-version: 1.23
 
-      - name: Build Binaries
+      - name: Build Binaries 🔨
         run: |
           mkdir -p build
           for GOOS in linux darwin; do
             for GOARCH in amd64 arm64; do
-              OUTPUT="build/dot-$GOOS-$GOARCH"
+              OUTPUT="build/dot-${GOOS}-${GOARCH}"
               GOOS=$GOOS GOARCH=$GOARCH go build -o $OUTPUT
             done
           done
 
-      - name: Release Binaries
+      - name: Generate Release Notes 📝
+        id: release_notes
+        run: |
+          echo "## What's New 🎉" > release_notes.md
+          echo "" >> release_notes.md
+          git log --pretty=format:"- %s (%h)" $(git describe --tags --abbrev=0)..HEAD >> release_notes.md
+          echo "" >> release_notes.md
+          echo "🚀 Thank you for using dot! Stay awesome! 🌟" >> release_notes.md
+
+      - name: Update Release Notes and Publish Binaries 🎁
         uses: softprops/action-gh-release@v2
         with:
           files: |
@@ -39,3 +48,7 @@ jobs:
             build/dot-linux-arm64
             build/dot-darwin-amd64
             build/dot-darwin-arm64
+          body_path: ./release_notes.md
+          overwrite: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

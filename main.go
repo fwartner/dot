@@ -1,7 +1,7 @@
 package main
 
 import (
-	"dotfiles/cmd"
+	"github.com/fwartner/dot/cmd"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"

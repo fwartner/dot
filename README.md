@@ -1,4 +1,4 @@
-# Dotfiles Manager
+# dot
 
 A robust CLI tool to manage, install, and synchronize your dotfiles across multiple systems. The tool supports various Linux distributions (Debian, Ubuntu, Fedora, Arch) and macOS, ensuring your development environment is consistent everywhere.
 
@@ -32,8 +32,8 @@ Ensure the following are installed on your system:
 1. **Clone the Repository**
 
    ```bash
-   git clone https://github.com/your-username/dotfiles-manager.git
-   cd dotfiles-manager
+   git clone https://github.com/fwartner/dot.git
+   cd dot
    ```
 
 2. **Initialize `go.mod`**
@@ -41,7 +41,7 @@ Ensure the following are installed on your system:
    If `go.mod` does not exist (e.g., for fresh forks), initialize it:
 
    ```bash
-   go mod init github.com/your-username/dotfiles-manager
+   go mod init github.com/fwartner/dot
    go mod tidy
    ```
 
@@ -61,7 +61,7 @@ Ensure the following are installed on your system:
    mv dotfiles /usr/local/bin/
    ```
 
-Alternatively, download a prebuilt binary from the [Releases](https://github.com/your-username/dotfiles-manager/releases) page.
+Alternatively, download a prebuilt binary from the [Releases](https://github.com/fwartner/dot/releases) page.
 
 ---
 
@@ -76,7 +76,7 @@ Example configuration:
 
 ```yaml
 # Repository URL for your dotfiles
-dotfiles_repo: "https://github.com/your-username/dotfiles.git"
+dotfiles_repo: "https://github.com/fwartner/dotfiles-arch.git"
 
 # Directory where the dotfiles will be cloned
 dotfiles_dir: "~/dotfiles"
@@ -99,7 +99,7 @@ The tool provides several commands to manage your dotfiles. Each command support
 ### 1. Install Dependencies
 
 ```bash
-dotfiles install [--skip-zsh]
+dot install [--skip-zsh]
 ```
 
 - Installs tools specified in `config.yml`.
@@ -108,7 +108,7 @@ dotfiles install [--skip-zsh]
 ### 2. Setup Dotfiles
 
 ```bash
-dotfiles setup [--dir <custom-directory>]
+dot setup [--dir <custom-directory>]
 ```
 
 - Clones the dotfiles repository.
@@ -118,7 +118,7 @@ dotfiles setup [--dir <custom-directory>]
 ### 3. Pull Updates
 
 ```bash
-dotfiles pull [--fetch-only]
+dot pull [--fetch-only]
 ```
 
 - Pulls the latest changes from your dotfiles repository.
@@ -127,7 +127,7 @@ dotfiles pull [--fetch-only]
 ### 4. Push Changes
 
 ```bash
-dotfiles push [--message <commit-message>]
+dot push [--message <commit-message>]
 ```
 
 - Pushes local changes to the dotfiles repository.
@@ -144,7 +144,7 @@ dotfiles push [--message <commit-message>]
 ### Project Structure
 
 ```
-dotfiles/
+dot/
 ├── cmd/            # Command implementations
 │   ├── install.go
 │   ├── setup.go

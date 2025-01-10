@@ -26,7 +26,7 @@ jobs:
           mkdir -p build
           for GOOS in linux darwin; do
             for GOARCH in amd64 arm64; do
-              OUTPUT="build/dotfiles-$GOOS-$GOARCH"
+              OUTPUT="build/dot-$GOOS-$GOARCH"
               GOOS=$GOOS GOARCH=$GOARCH go build -o $OUTPUT
             done
           done
@@ -35,7 +35,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            build/dotfiles-linux-amd64
-            build/dotfiles-linux-arm64
-            build/dotfiles-darwin-amd64
-            build/dotfiles-darwin-arm64
+            build/dot-linux-amd64
+            build/dot-linux-arm64
+            build/dot-darwin-amd64
+            build/dot-darwin-arm64

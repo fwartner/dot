@@ -30,4 +30,4 @@ jobs:
       - name: Build Binary
         run: |
           mkdir -p build
-          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o build/dotfiles-${{ matrix.goos }}-${{ matrix.goarch }}
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o build/dot-${{ matrix.goos }}-${{ matrix.goarch }}

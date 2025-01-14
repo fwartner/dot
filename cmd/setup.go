@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"dotfiles/utils"
+	"github.com/fwartner/dot/utils"
 	"github.com/spf13/cobra"
 )
 

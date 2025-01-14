@@ -20,7 +20,6 @@ func main() {
 	rootCmd.AddCommand(cmd.NewInitCommand())
 	rootCmd.AddCommand(cmd.NewPullCommand())
 	rootCmd.AddCommand(cmd.NewPushCommand())
-	rootCmd.AddCommand(cmd.NewUpdateCommand())
 
 	// Execute the root command
 	if err := rootCmd.Execute(); err != nil {

@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"strings"
-
 	"github.com/fwartner/dot/utils"
 	"github.com/spf13/cobra"
 )
@@ -15,9 +13,7 @@ func NewInstallCommand() *cobra.Command {
 		Use:   "install",
 		Short: "Install necessary tools and dependencies",
 		Run: func(cmd *cobra.Command, args []string) {
-			// Split the skipTools flag into a slice of tools
-			skipped := strings.Split(skipTools, ",")
-			utils.InstallTools(skipped)
+			utils.InstallTools()
 		},
 	}
 

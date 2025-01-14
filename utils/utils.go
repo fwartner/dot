@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -16,7 +17,7 @@ type Configuration struct {
 	DotfilesRepo string   `yaml:"dotfiles_repo"`
 	DotfilesDir  string   `yaml:"dotfiles_dir"`
 	Tools        []string `yaml:"tools"`
-	Files        []string `yaml:"files"` // New field for specific files or directories
+	Files        []string `yaml:"files"`
 }
 
 // Config holds the loaded configuration
@@ -125,6 +126,84 @@ func PullDotfiles() {
 	dotfilesDir := os.ExpandEnv(Config.DotfilesDir)
 	logrus.Info("Pulling latest changes from the repository...")
 	RunCommand("git", "-C", dotfilesDir, "pull")
+}
+
+// InstallTools installs tools based on the current platform
+func InstallTools() {
+	if len(Config.Tools) == 0 {
+		logrus.Info("No tools specified for installation.")
+		return
+	}
+
+	logrus.Info("Installing necessary tools...")
+	switch runtime.GOOS {
+	case "linux":
+		distro := DetectLinuxDistro()
+		logrus.Infof("Detected Linux distribution: %s", distro)
+		for _, tool := range Config.Tools {
+			if IsToolInstalled(tool) {
+				logrus.Infof("Tool already installed: %s", tool)
+				continue
+			}
+			installLinuxTool(distro, tool)
+		}
+	case "darwin":
+		for _, tool := range Config.Tools {
+			if IsToolInstalled(tool) {
+				logrus.Infof("Tool already installed: %s", tool)
+				continue
+			}
+			installMacOSTool(tool)
+		}
+	default:
+		logrus.Fatalf("Unsupported OS: %s", runtime.GOOS)
+	}
+}
+
+// DetectLinuxDistro detects the current Linux distribution
+func DetectLinuxDistro() string {
+	cmd := exec.Command("sh", "-c", "cat /etc/os-release | grep ^ID=")
+	output, err := cmd.Output()
+	if err != nil {
+		logrus.Fatalf("Failed to detect Linux distribution: %v", err)
+	}
+	return strings.TrimSpace(strings.Split(string(output), "=")[1])
+}
+
+// installLinuxTool installs a tool on a Linux distribution
+func installLinuxTool(distro, tool string) {
+	switch distro {
+	case "ubuntu", "debian":
+		RunCommand("sudo", "apt", "update")
+		RunCommand("sudo", "apt", "install", "-y", tool)
+	case "fedora":
+		RunCommand("sudo", "dnf", "install", "-y", tool)
+	case "arch":
+		if !IsToolInstalled("yay") {
+			logrus.Info("Installing yay package manager...")
+			RunCommand("sudo", "pacman", "-Sy", "--noconfirm")
+			RunCommand("git", "clone", "https://aur.archlinux.org/yay.git")
+			RunCommand("sh", "-c", "cd yay && makepkg -si --noconfirm && cd .. && rm -rf yay")
+		}
+		RunCommand("yay", "-S", "--noconfirm", tool)
+	default:
+		logrus.Fatalf("Unsupported Linux distribution: %s", distro)
+	}
+}
+
+// installMacOSTool installs a tool on macOS
+func installMacOSTool(tool string) {
+	if !IsToolInstalled("brew") {
+		logrus.Info("Homebrew not found. Installing Homebrew...")
+		RunCommand("/bin/bash", "-c", "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)")
+	}
+	RunCommand("brew", "install", tool)
+}
+
+// IsToolInstalled checks if a tool is installed
+func IsToolInstalled(tool string) bool {
+	_, err := exec.LookPath(tool)
+	return err == nil
 }
 
 // runStow executes the stow command for a specific file or directory

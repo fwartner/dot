@@ -1,12 +1,10 @@
 package cmd
 
 import (
+	"dotfiles/utils"
 	"fmt"
-	"os"
-
-	"github.com/fwartner/dot/utils"
-
 	"github.com/spf13/cobra"
+	"os"
 )
 
 func NewInitCommand() *cobra.Command {

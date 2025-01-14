@@ -11,3 +11,10 @@ tools:
   - zsh
   - neovim
   - tmux
+
+# Specific dotfiles or directories to sync
+files:
+  - .bashrc
+  - .zshrc
+  - .vimrc
+  - .config/nvim

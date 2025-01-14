@@ -11,7 +11,7 @@ func NewPushCommand() *cobra.Command {
 		Use:   "push",
 		Short: "Push local changes to the dotfiles repository",
 		Run: func(cmd *cobra.Command, args []string) {
-			utils.PushDotfiles()
+			utils.StowDotfiles()
 		},
 	}
 }

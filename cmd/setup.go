@@ -1,12 +1,11 @@
 package cmd
 
 import (
-	"github.com/fwartner/dot/utils"
-
-	"github.com/sirupsen/logrus"
+	"dotfiles/utils"
 	"github.com/spf13/cobra"
 )
 
+// NewSetupCommand creates the setup command
 func NewSetupCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "setup",
@@ -14,7 +13,6 @@ func NewSetupCommand() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			utils.CloneDotfiles()
 			utils.StowDotfiles()
-			logrus.Info("Dotfiles setup is complete!")
 		},
 	}
 }

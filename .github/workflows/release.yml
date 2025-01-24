@@ -52,23 +52,4 @@ jobs:
           overwrite: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  homebrew:
-    name: Bump Homebrew formula
-    runs-on: ubuntu-latest
-    steps:
-        - name: Extract version
-          id: extract-version
-          run: |
-            echo "tag-name=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-        - uses: mislav/bump-homebrew-formula-action@v3
-          if: "!contains(github.ref, '-')"
-          with:
-            formula-name: dot
-            formula-path: Formula/dot.rb
-            homebrew-tap: fwartner/homebrew-tap
-            base-branch: main
-            commit-message: |
-              {{formulaName}} {{version}}
-          env:
-            COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+ 
